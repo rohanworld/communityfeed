@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="shortcut icon" href="icon.png" type="image/x-icon">
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-database.js"></script>
+
+    <title>Presidency Community Feed</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <div class="header-content">
+          <h1 style="cursor: pointer;">Community Feed</h1>
+          <div class="create-post">
+            <button id="createPostButton">Create Post</button>
+          </div>
+          <div class="sort-posts">
+            <label for="sort"></label>
+            <select id="sort">
+              <option selected value="sortby">Sort By</option>
+              <option value="date">Date</option>
+              <option value="title">Title</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="container">
+        <div class="feed">
+          <h2 align="center" style="cursor: pointer;">Community Posts</h2>
+          <div id="postList"></div>
+        </div>
+      </div>
+    </main>
+
+    <div id="createPostModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <form id="createPostForm">
+          <h2>Create Post</h2>
+          <label for="title">Title:</label>
+          <input type="text" id="title" name="title" />
+          <label for="content">Post:</label>
+          <textarea id="content" name="content"></textarea>
+          <button type="submit">Submit</button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      let posts = [];
+
+      function renderPosts() {
+        const postList = document.getElementById("postList");
+        postList.innerHTML = "";
+
+        posts.forEach((post) => {
+          const postItem = document.createElement("div");
+          postItem.classList.add("post");
+
+          const postTitle = document.createElement("h3");
+          postTitle.textContent = post.title;
+
+          const postContent = document.createElement("p");
+          postContent.textContent = post.content;
+
+          postItem.appendChild(postTitle);
+          postItem.appendChild(postContent);
+          postList.appendChild(postItem);
+        });
+      }
+
+      function sortPosts(sortBy) {
+        if (sortBy === "date") {
+          posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+        } else {
+          posts.sort((a, b) => a.title.localeCompare(b.title));
+        }
+
+        renderPosts();
+      }
+
+      var config = {
+        apiKey: "AIzaSyBBfiPLw8h_6vmA0MIJ84K1GSeBW_cq58Y",
+        authDomain: "chat-site-903ef.firebaseapp.com",
+        projectId: "chat-site-903ef",
+        storageBucket: "chat-site-903ef.appspot.com",
+        messagingSenderId: "679925017389",
+        appId: "1:679925017389:web:d2f2d1262cbd4fe3d501a4",
+      };
+
+      firebase.initializeApp(config);
+
+      var database = firebase.database();
+
+      var postsRef = database.ref("posts");
+
+      function createPost(event) {
+        event.preventDefault();
+
+        const title = document.getElementById("title").value;
+        const content = document.getElementById("content").value;
+        const date = new Date().toISOString();
+
+        const newPost = {
+          title: title,
+          content: content,
+          date: date,
+        };
+
+        posts.push(newPost);
+        postsRef.push(newPost);
+        sortPosts(document.getElementById("sort").value);
+
+        document.getElementById("createPostModal").style.display = "none";
+      }
+
+      document
+        .getElementById("createPostButton")
+        .addEventListener("click", () => {
+          document.getElementById("createPostModal").style.display = "block";
+        });
+      document
+        .getElementById("createPostForm")
+        .addEventListener("submit", createPost);
+      document
+        .getElementsByClassName("close")[0]
+        .addEventListener("click", () => {
+          document.getElementById("createPostModal").style.display = "none";
+        });
+      document.getElementById("sort").addEventListener("change", (event) => {
+        sortPosts(event.target.value);
+      });
+
+      renderPosts();
+
+      // https://console.firebase.google.com/u/0/project/chat-site-903ef/database/chat-site-903ef-default-rtdb/data
+
+      const postList = document.getElementById("postList");
+      const createPostForm = document.getElementById("createPostForm");
+
+      createPostForm.addEventListener("submit", (event) => {
+        location.reload();
+
+        const title = createPostForm.elements["title"].value;
+        console.log(title);
+        const content = createPostForm.elements["content"].value;
+
+        const newPost = {
+          title: title,
+          content: content,
+          date: new Date().toString(),
+        };
+
+        createPostForm.reset();
+      });
+      postsRef.orderByChild("date").on("child_added", (data) => {
+        const post = data.val();
+        const postItem = `
+    <div class="post">
+      <h3>${post.title}</h3>
+      <p>${post.content}</p>
+      <p class="date"> Date: ${post.date.substring(0, 10)}</p>
+    </div>
+  `;
+        postList.innerHTML += postItem;
+
+        posts.push(post);
+      });
+    </script>
+  </body>
+</html>
