@@ -53,120 +53,124 @@
         </form>
       </div>
     </div>
-
     <script>
-      let posts = [];
-
-      function renderPosts() {
-        const postList = document.getElementById("postList");
-        postList.innerHTML = "";
-
-        posts.forEach((post) => {
-          const postItem = document.createElement("div");
-          postItem.classList.add("post");
-
-          const postTitle = document.createElement("h3");
-          postTitle.textContent = post.title;
-
-          const postContent = document.createElement("p");
-          postContent.textContent = post.content;
-
-          postItem.appendChild(postTitle);
-          postItem.appendChild(postContent);
-          postList.appendChild(postItem);
-        });
-      }
-
-      function sortPosts(sortBy) {
-        if (sortBy === "date") {
-          posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-        } else {
-          posts.sort((a, b) => a.title.localeCompare(b.title));
+        let posts = [];
+  
+        function encodeHtml(html) {
+          return document.createElement("a").appendChild(document.createTextNode(html)).parentNode.innerHTML;
         }
-
-        renderPosts();
-      }
-
-      var config = {
-        "hosting": {
-          "public": "public",
-          "ignore": [
-            "**/*.html"
-          ]
+  
+        function decodeHtml(html) {
+          const textarea = document.createElement("textarea");
+          textarea.innerHTML = html;
+          return textarea.value;
         }
-        apiKey: "AIzaSyBBfiPLw8h_6vmA0MIJ84K1GSeBW_cq58Y",
-        authDomain: "chat-site-903ef.firebaseapp.com",
-        projectId: "chat-site-903ef",
-        storageBucket: "chat-site-903ef.appspot.com",
-        messagingSenderId: "679925017389",
-        appId: "1:679925017389:web:d2f2d1262cbd4fe3d501a4",
-      };
-
-      firebase.initializeApp(config);
-
-      var database = firebase.database();
-
-      var postsRef = database.ref("posts");
-
-      function createPost(event) {
-        event.preventDefault();
-
-        const title = document.getElementById("title").value;
-        const content = document.getElementById("content").value;
-        const date = new Date().toISOString();
-
-        const newPost = {
-          title: title,
-          content: content,
-          date: date,
+  
+        function renderPosts() {
+          const postList = document.getElementById("postList");
+          postList.innerHTML = "";
+  
+          posts.forEach((post) => {
+            const postItem = document.createElement("div");
+            postItem.classList.add("post");
+  
+            const postTitle = document.createElement("h3");
+            postTitle.textContent = decodeHtml(post.title);
+  
+            const postContent = document.createElement("p");
+            postContent.innerHTML = decodeHtml(post.content);
+  
+            postItem.appendChild(postTitle);
+            postItem.appendChild(postContent);
+            postList.appendChild(postItem);
+          });
+        }
+  
+        function sortPosts(sortBy) {
+          if (sortBy === "date") {
+            posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+          } else {
+            posts.sort((a, b) => decodeHtml(a.title).localeCompare(decodeHtml(b.title)));
+          }
+  
+          renderPosts();
+        }
+  
+        var config = {
+          apiKey: "AIzaSyBBfiPLw8h_6vmA0MIJ84K1GSeBW_cq58Y",
+          authDomain: "chat-site-903ef.firebaseapp.com",
+          projectId: "chat-site-903ef",
+          storageBucket: "chat-site-903ef.appspot.com",
+          messagingSenderId: "679925017389",
+          appId: "1:679925017389:web:d2f2d1262cbd4fe3d501a4",
         };
-
-        posts.push(newPost);
-        postsRef.push(newPost);
-        sortPosts(document.getElementById("sort").value);
-
-        document.getElementById("createPostModal").style.display = "none";
-      }
-
-      document
-        .getElementById("createPostButton")
-        .addEventListener("click", () => {
-          document.getElementById("createPostModal").style.display = "block";
-        });
-      document
-        .getElementById("createPostForm")
-        .addEventListener("submit", createPost);
-      document
-        .getElementsByClassName("close")[0]
-        .addEventListener("click", () => {
+  
+        firebase.initializeApp(config);
+  
+        var database = firebase.database();
+  
+        var postsRef = database.ref("posts");
+  
+        function createPost(event) {
+          event.preventDefault();
+  
+          const title = encodeHtml(document.getElementById("title").value);
+          const content = encodeHtml(document.getElementById("content").value);
+          const date = new Date().toISOString();
+  
+          const newPost = {
+            title: title,
+            content: content,
+            date: date,
+          };
+  
+          posts.push(newPost);
+          postsRef.push(newPost);
+          sortPosts(document.getElementById("sort").value);
+  
           document.getElementById("createPostModal").style.display = "none";
+        }
+  
+        document
+          .getElementById("createPostButton")
+          .addEventListener("click", () => {
+            document.getElementById("createPostModal").style.display = "block";
+          });
+        document
+          .getElementById("createPostForm")
+          .addEventListener("submit", createPost);
+        document
+          .getElementsByClassName("close")[0]
+          .addEventListener("click", () => {
+            document.getElementById("createPostModal").style.display = "none";
+          });
+        document.getElementById("sort").addEventListener("change", (event) => {
+          sortPosts(event.target.value);
         });
-      document.getElementById("sort").addEventListener("change", (event) => {
-        sortPosts(event.target.value);
-      });
-
-      renderPosts();
-
-      // https://console.firebase.google.com/u/0/project/chat-site-903ef/database/chat-site-903ef-default-rtdb/data
-
-      const postList = document.getElementById("postList");
-      const createPostForm = document.getElementById("createPostForm");
-
-      createPostForm.addEventListener("submit", (event) => {
-        location.reload();
-
-        const title = createPostForm.elements["title"].value;
-        console.log(title);
-        const content = createPostForm.elements["content"].value;
-
-        const newPost = {
-          title: title,
-          content: content,
-          date: new Date().toString(),
-        };
-
-        createPostForm.reset();
-      });
+  
+        renderPosts();
+  
+        // https://console.firebase.google.com/u/0/project/chat-site-903ef/database/chat-site-903ef-default-rtdb/data
+  
+        const postList = document.getElementById("postList");
+        const createPostForm = document.getElementById("createPostForm");
+  
+        createPostForm.addEventListener("submit", (event) => {
+          location.reload();
+  
+          const title = createPostForm.elements["title"].value;
+          console.log(title);
+          const content = createPostForm.elements["content"].value;
+  
+          const newPost = {
+            title: title,
+            content: content,
+            date: new Date().toString(),
+          };
+  
+          createPostForm.reset();
+        });
+  
       postsRef.orderByChild("date").on("child_added", (data) => {
         const post = data.val();
         const postItem = `
